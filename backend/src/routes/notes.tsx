@@ -1,9 +1,11 @@
-import express from 'express'
-import { createNotes, getNotes } from "../controllers/notes"
+import express from "express";
+import * as NotesController from "../controllers/notes";
 
 const router = express.Router();
 
-router.get("/",getNotes);
-router.post("/",createNotes);
+router.get("/", NotesController.getNotes);
+router.get("/:noteId", NotesController.getNote);
+router.post("/", NotesController.createNotes);
+router.patch("/noteId", NotesController.updateNote);
 
 export default router;

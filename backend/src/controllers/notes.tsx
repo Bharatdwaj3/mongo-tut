@@ -1,23 +1,90 @@
 import { RequestHandler } from "express";
-import NodeModel from '../models/note'
-export const getNotes:RequestHandler= async (req, res,next) => {
-  try{
-    const notes = await NodeModel.find().exec();
+import NoteModel from "../models/note";
+import createHttpError from "http-errors";
+import mongoose from "mongoose";
+export const getNotes: RequestHandler = async (req, res, next) => {
+  try {
+    const notes = await NoteModel.find().exec();
     res.status(200).json(notes);
-  } catch(error){
+  } catch (error) {
     next(error);
   }
+};
+export const getNote: RequestHandler = async (req, res, next) => {
+  const noteId = req.params.noteId;
+  try {
+    if (!mongoose.isValidObjectId(noteId)) {
+      throw createHttpError(400, "Invalid Note id");
+    }
+    const note = await NoteModel.findById(noteId).exec();
+    if (!note) {
+      throw createHttpError(404, "Note not found");
+    }
+    res.status(200).json(note);
+  } catch (error) {
+    next(error);
+  }
+};
+
+interface CreateNoteBody {
+  title?: string;
+  text?: string;
 }
-export const createNotes: RequestHandler = async (req, res, next) => {
-  const title=req.body.title;
+
+export const createNotes: RequestHandler<
+  unknown,
+  unknown,
+  CreateNoteBody,
+  unknown
+> = async (req, res, next) => {
+  const title = req.body.title;
   const text = req.body.text;
   try {
-    const newNote = await NodeModel.create({
-      title:title,
-      text:text,
+    if (!title) {
+      throw createHttpError(400, "Note must have a type");
+    }
+    const newNote = await NoteModel.create({
+      title: title,
+      text: text,
     });
     res.status(201).json(newNote);
   } catch (error) {
     next(error);
   }
+};
+
+interface updateNote {
+  title?: string;
+  text?: string;
 }
+interface updateNoteParams {
+  noteId: string;
+}
+export const updateNote: RequestHandler<
+  updateNoteParams,
+  unknown,
+  updateNote,
+  unknown
+> = async (req, res, next) => {
+  const noteId = req.params.noteId;
+  const newTitle = req.body.title;
+  const newText = req.body.text;
+  try {
+    if (!mongoose.isValidObjectId(noteId)) {
+      throw createHttpError(400, "Invalid Note id");
+    }
+    if (!newTitle) {
+      throw createHttpError(404, "Note not found");
+    }
+    const note = await NoteModel.findById(noteId).exec();
+    if (!note) {
+      throw createHttpError(404, "Note not found");
+    }
+    note.title = newTitle;
+    note.text = newText;
+    const updateNote = await note.save();
+    res.status(200).json(updateNote);
+  } catch (error) {
+    next(error);
+  }
+};
