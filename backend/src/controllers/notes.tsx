@@ -100,12 +100,10 @@ export const deleteNote: RequestHandler = async (req, res, next) => {
     }
 
 
-    const note = await NoteModel.findById(noteId).exec();
+    const note = await NoteModel.findByIdAndDelete(noteId).exec();
     if (!note) {
       throw createHttpError(404, "Note not found");
     }
-
-    await note.remove()
 
     res.sendStatus(204);
   } catch (error) {
