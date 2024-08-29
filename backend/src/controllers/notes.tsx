@@ -52,18 +52,18 @@ export const createNotes: RequestHandler<
     next(error);
   }
 };
-
-interface updateNote {
-  title?: string;
-  text?: string;
-}
 interface updateNoteParams {
   noteId: string;
 }
+interface updateNoteBody {
+  title?: string;
+  text?: string;
+}
+
 export const updateNote: RequestHandler<
   updateNoteParams,
   unknown,
-  updateNote,
+  updateNoteBody,
   unknown
 > = async (req, res, next) => {
   const noteId = req.params.noteId;
@@ -74,16 +74,17 @@ export const updateNote: RequestHandler<
       throw createHttpError(400, "Invalid Note id");
     }
     if (!newTitle) {
-      throw createHttpError(404, "Note not found");
+      throw createHttpError(400, "Note must have a title");
     }
+
     const note = await NoteModel.findById(noteId).exec();
     if (!note) {
       throw createHttpError(404, "Note not found");
     }
     note.title = newTitle;
     note.text = newText;
-    const updateNote = await note.save();
-    res.status(200).json(updateNote);
+    const updatedNote = await note.save();
+    res.status(200).json(updatedNote);
   } catch (error) {
     next(error);
   }
